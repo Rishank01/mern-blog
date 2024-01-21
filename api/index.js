@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express'; // Since we are using the import express from express , So we must use the type as module in package.json
 import mongoose from 'mongoose';
+import userRoutes from './routes/user.route.js';
 
 dotenv.config();
 
@@ -20,3 +21,6 @@ const app = express();
 app.listen(3000 , () => {
     console.log("Server is running on the port number 3000");
 });
+
+app.use('/api/user' , userRoutes);
+
