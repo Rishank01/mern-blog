@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import express from 'express'; // Since we are using the import express from express , So we must use the type as module in package.json
 import mongoose from 'mongoose';
@@ -19,6 +20,7 @@ mongoose.connect(process.env.DB_URL)
 const app = express();
 
 app.use(express.json()); // Middleware
+app.use(cookieParser());
 
 // Listening the Server
 app.listen(3000 , () => {

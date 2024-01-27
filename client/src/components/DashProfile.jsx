@@ -10,7 +10,7 @@ import 'react-circular-progressbar/dist/styles.css';
 
 export default function DashProfile() {
 
-    const {currentUser} = useSelector(state => state.user);
+    const {currentUser} = useSelector((state) => state.user);
     const [imageFile , setImageFile] = useState(null);
     const [imageFileUrl , setImageFileUrl] = useState(null);
     const [imageFileUploadProgress , setImageFileUploadProgress] = useState(null);
