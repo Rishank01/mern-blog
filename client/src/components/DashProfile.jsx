@@ -1,8 +1,10 @@
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { Alert, Button, TextInput } from 'flowbite-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { app } from '../firebase';
+import { updateFailure, updateStart, updateSuccess } from '../redux/user/userSlice';
+
 
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -10,11 +12,27 @@ import 'react-circular-progressbar/dist/styles.css';
 
 export default function DashProfile() {
 
+
+    const dispatch = useDispatch();
+
     const {currentUser} = useSelector((state) => state.user);
     const [imageFile , setImageFile] = useState(null);
     const [imageFileUrl , setImageFileUrl] = useState(null);
     const [imageFileUploadProgress , setImageFileUploadProgress] = useState(null);
     const [imageFileUploadError , setImageFileUploadError] = useState(null);
+
+    // This state is managed in order to check if the image file is completely uploaded or not.....Before we make the update request..
+    const [imageFileUploading , setImageFileUploading] = useState(false);
+
+    // TO manage the state that the profile is updated
+    const [updateUserSuccess , setUpdateUserSuccess] = useState(null);
+
+    // To manage the state that there is nothing to update
+    const [updateUserError, setUpdateUserError] = useState(null);
+
+
+    // Creation of a formData state , which helps to track data in updation through update api functionality.....
+    const [formData , setFormData] = useState({});
 
     console.log(imageFileUploadProgress , imageFileUploadError);
 
@@ -28,6 +46,7 @@ export default function DashProfile() {
         }
         
     };
+
     
     useEffect(() => {
         if(imageFile){
@@ -49,6 +68,7 @@ export default function DashProfile() {
         // }
         
         // At the  start of the image upload set the error to null
+        setImageFileUploading(true);
         setImageFileUploadError(null);
 
         const storage = getStorage(app);
@@ -67,20 +87,72 @@ export default function DashProfile() {
                 setImageFileUploadProgress(null);
                 setImageFile(null);
                 setImageFileUrl(null);
+                setImageFileUploading(false);
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     setImageFileUrl(downloadURL);
+                    setFormData({...formData , profilePicture : downloadURL});
+                    setImageFileUploading(false);
                 });
             }
         );
         // console.log("uploading Image...")
     };
 
+
+    // handleChange function to manage the changes in the formData...
+    const handleChange = (e) => {
+        setFormData({...formData , [e.target.id] : e.target.value});
+    };
+    // console.log(formData);
+
+
+    // Submitting the updated formData 
+    const handleSubmit = async (e) => {
+        setUpdateUserError(null);
+        setUpdateUserSuccess(null); 
+        e.preventDefault();
+        if(Object.keys(formData).length === 0){ // This is to check if the updated form data is empty or not...
+            setUpdateUserError('No changes made');
+            return;
+        }
+
+        if(imageFileUploading){
+            setUpdateUserError('Please wait for the image to upload');  
+            return;
+        }
+
+        try{
+            dispatch(updateStart());
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+                method : 'PUT',
+                headers : {
+                    'Content-Type' : 'application/json',
+                },
+                body : JSON.stringify(formData),
+            })   
+            const data = await res.json();
+
+            if(!res.ok){
+                dispatch(updateFailure(data.message));
+                setUpdateUserError(data.message);
+            }
+            else{
+                dispatch(updateSuccess(data));
+                setUpdateUserSuccess("User's profile updated Successfully");
+            }
+        }
+        catch(error){
+            dispatch(updateFailure(error.message));
+            setUpdateUserError(data.message);
+        }
+    }
+
   return (
     <div className='max-w-lg mx-auto p-3 w-full'>
       <h1 className='my-7 text-center font-semibold text-3xl'>Profile</h1>
-      <form className='flex flex-col gap-4'>
+      <form onSubmit = {handleSubmit} className='flex flex-col gap-4'>
 
         {/* Upload Image and also hiding the choose file option from the web page */}
         <input type = 'file' accept = 'image/*' onChange={handleImageChange} ref = {filePickerRef} hidden/> 
@@ -115,9 +187,9 @@ export default function DashProfile() {
             {imageFileUploadError}  {/* We want to show this error message in the alert */}
         </Alert>} 
 
-        <TextInput type = 'text' id = 'username' placeholder='username' defaultValue = {currentUser.username} />
-        <TextInput type = 'email' id = 'email' placeholder='email' defaultValue = {currentUser.email} />
-        <TextInput type = 'password' id = 'password' placeholder='password' />
+        <TextInput type = 'text' id = 'username' placeholder='username' defaultValue = {currentUser.username} onChange={handleChange}/>
+        <TextInput type = 'email' id = 'email' placeholder='email' defaultValue = {currentUser.email} onChange={handleChange}/>
+        <TextInput type = 'password' id = 'password' placeholder='password' onChange={handleChange}/>
 
         <Button type = 'submit' gradientDuoTone='purpleToBlue' outline >Update</Button>
       </form>
@@ -126,6 +198,14 @@ export default function DashProfile() {
         <span className='cursor-pointer'>Delete Account</span>
         <span className='cursor-pointer'>Sign Out</span>
       </div>
+
+      {/* Alert message to display that the user is updated successfully*/}
+      {updateUserSuccess && 
+    (<Alert color='success' className='mt-5'>{updateUserSuccess}</Alert>)}
+
+    {updateUserError &&   
+    (<Alert color='failure' className='mt-5'>{updateUserError}</Alert>)}
+    
     </div>
   )
 }

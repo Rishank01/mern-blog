@@ -44,26 +44,25 @@ export const updateUser = async (req , res , next) => {
         if(!req.body.username.match(/^[a-zA-Z0-9]+$/)){ // Do not provide space between and after '+' in the REGEX otherwise it will trigger an error...
             return next(errorHandler(400 , 'Username can only contains letters and numbers'));
         }
+    }
 
         // console.log("In update user");
-        try{
-            const updatedUser = await User.findByIdAndUpdate(req.params.userId , {
-                $set : {
-                    username : req.body.username,
-                    email : req.body.email,
-                    profilePicture : req.body.profilePicture,
-                    password : req.body.password,
-                },
-            }, {new : true} );
-            const {password , ...rest} = updatedUser._doc;
-
-            // console.log("Now I am going to print the value of the updated user");
-            // console.log("The value of the updated user is ",updateUser);
-            // console.log("This is the value in the rest " , rest);
-            return res.status(200).json(rest);
-        }
-        catch(error){
-            next(error);    
-        }
+    try{
+        const updatedUser = await User.findByIdAndUpdate(req.params.userId , {
+            $set : {
+                username : req.body.username,
+                email : req.body.email,
+                profilePicture : req.body.profilePicture,
+                password : req.body.password,
+            },
+        }, {new : true} );
+        const {password , ...rest} = updatedUser._doc;
+        // console.log("Now I am going to print the value of the updated user");
+        // console.log("The value of the updated user is ",updateUser);
+        // console.log("This is the value in the rest " , rest);
+        return res.status(200).json(rest);
+    }
+    catch(error){
+        next(error);    
     }
 }
