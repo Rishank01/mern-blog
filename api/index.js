@@ -4,6 +4,7 @@ import express from 'express'; // Since we are using the import express from exp
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
+import postRoutes from './routes/post.route.js';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ mongoose.connect(process.env.DB_URL)
 .catch((error) => {
     console.log("Error while connecting to the DB" , error);
 }) 
-
+ 
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.listen(3000 , () => {
 
 app.use('/api/user' , userRoutes);
 app.use('/api/auth' , authRoutes);
+app.use('/api/post' , postRoutes);
 
 
 // Defining the middleware for handling the errors
