@@ -26,3 +26,50 @@ export const create = async(req , res , next) => {
         next(error);
     }
 }
+
+
+export const getposts = async(req , res , next) => {
+    try{
+        const startIndex = parseInt(req.query.startIndex) || 0; // If any start index is given then start fetching from that index ... otherwise from 0.
+        const limit = parseInt(req.query.limit) || 9;
+        const sortDirection = req.query.order === 'asc' ? 1 : -1;
+
+        // Now searching the posts
+        const posts = await Post.find({
+            ...(req.query.userId && {userId : req.query.userId}),
+            ...(req.query.category && {category : req.query.category}),
+            ...(req.query.slug && {slug : req.query.slug}),
+            ...(req.query.postId && {_id : req.query.postId}),
+            ...(req.query.searchTerm && {
+                // or is used to give the choice ... either search in one or the other
+                $or : [ 
+                    { title : {$regex : req.query.searchTerm , $options : 'i'}}, // Here i in options is used so as to search case insensitively..
+                    {content : {$regex : req.query.searchTerm , $options : 'i'}}, // regex is the function to search a pattern
+                ],
+            }),}).sort({ updatedAt : sortDirection }).skip(startIndex).limit(limit);
+
+            // Fetching the total number of posts...
+            const totalPosts = await Post.countDocuments();
+
+            // Fetching the total number of posts of the last month
+            const now = new Date();
+            const oneMonthAgo = new Date(
+                now.getFullYear(),
+                now.getMonth()-1,
+                now.getDate()
+            );
+
+            const lastMonthPosts = await Post.countDocuments({
+                createdAt : {$gte : oneMonthAgo},
+            })
+
+            res.status(200).json({
+                posts,
+                totalPosts,
+                lastMonthPosts,
+            })
+
+    }catch(error){
+        console.log(error);
+    }
+}
