@@ -6,6 +6,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { app } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
 
 export default function CreatePost() {
@@ -13,7 +14,11 @@ export default function CreatePost() {
     const [file , setFile] = useState(null);
     const [imageUploadProgress , setImageUploadProgress] = useState(null);
     const [imageUploadError , setImageUploadError] = useState(null);
+    const [publishError , setPublishError] = useState(null);
     const [formData , setFormData] = useState({})
+
+    const navigate = useNavigate(); 
+    // console.log(formData); 
 
     const handleUploadImage = async() => {
         try{    
@@ -51,20 +56,51 @@ export default function CreatePost() {
             setImageUploadProgress(null);
             console.log(error);
         }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try{
+            const res = await fetch('/api/post/create' , {
+                method : 'POST' ,
+                headers : {
+                    'Content-Type' : 'application/json',
+                },
+                body : JSON.stringify(formData),
+             })
+
+            const data = await res.json();
+
+            if(!res.ok){
+                setPublishError(data.message);
+                return;
+            }
+            else{
+                setPublishError(null);
+                navigate(`/post/${data.slug}`);  // Creating the dynamic and the unique url for each post that is being created by the admin..
+            }
+        }catch(error){
+            setPublishError("Something went wrong");
+        }
     }
 
   return (
     <div className='p-3 max-w-3xl mx-auto min-h-screen '>
         <h1 className='text-center text-3xl my-7 font-semibold'>Create Post</h1>
-        <form className='flex flex-col gap-4'>
+        <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
             <div className='flex flex-col gap-4 sm:flex-row justify-between'>
-                <TextInput type = 'text' placeholder='Title' required id = 'title' className='flex-1' />
-                <Select>
+                <TextInput type = 'text' placeholder='Title' required id = 'title' className='flex-1'
+                    onChange={(e) => {setFormData({...formData , title : e.target.value})}}
+                />
+
+                <Select
+                onChange={(e) => {setFormData({...formData , category : e.target.value})}}>
                     <option value = 'uncategorized'>Select a category</option> {/* If someone chooses this , it means that no option is chosen */}
                     <option value = 'javascript'>JavaScript</option>
                     <option value = 'reactjs'>React.js</option>
                     <option value = 'nextjs'>Next.js</option> 
                 </Select>
+
             </div>
             <div className='flex gap-4 items-center justify-between border-spacing-4 border-teal-500 border-4 border-dotted p-3 '>
                 <FileInput type = 'file' accept = 'image/*' onChange={(e) => setFile(e.target.files[0])}/>
@@ -91,9 +127,14 @@ export default function CreatePost() {
 
             {/* This is used in order to provide an interface where we can write anything as per our need (blog) content 
                 Its CSS is provided in the index.css */}
-            <ReactQuill theme = "snow" placeholder='Write Something....' className='h-72 mb-12' required/>
+            <ReactQuill theme = "snow" placeholder='Write Something....' className='h-72 mb-12' required 
+            onChange={(value) => {setFormData({...formData , content : value})}} /> {/* This is how we do access the value in the quilt */}
 
             <Button type='submit' gradientDuoTone='purpleToPink'>Publish</Button> 
+
+            {
+                publishError && <Alert color = 'failure' className='mt-5'>{publishError}</Alert> 
+            }
         </form>
     </div>
   )
