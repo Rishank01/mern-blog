@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 export default function DashPosts() {
   const {currentUser} = useSelector((state) => state.user);
   const [userPosts , setUserPosts] = useState([]);
+  const [showMore , setShowMore] = useState(true);
 
   console.log(userPosts);
   console.log(currentUser.isAdmin);
@@ -19,6 +20,9 @@ export default function DashPosts() {
         // console.log(data);
         if(res.ok){
           setUserPosts(data.posts);
+          if(data.posts.length < 9){
+            setShowMore(true);
+          }
         }
       }catch(error){
         console.log(error.message); 
@@ -30,6 +34,24 @@ export default function DashPosts() {
     }
   },[currentUser._id]); // It will work each time the id will change
 
+
+  const handleShowMore = async() => {
+    const startIndex = userPosts.length;
+
+    try{
+      const res = await fetch(`/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`);
+      const data = await res.json();
+      
+      if(res.ok){
+        setUserPosts((prev) => [...prev , ...data.posts]);
+        if(data.posts.length < 9){
+          setShowMore(false);
+        }
+      }
+    }catch(error){
+      console.log(error);
+    }
+  }
 
   return (
     <div className='table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700
@@ -77,6 +99,7 @@ export default function DashPosts() {
                 ))
               }
             </Table>
+            {showMore && (<button className='w-full text-teal-500 self-center text-sm py-7' onClick={handleShowMore}>Show more</button>)}
           </div>
         ) : (
           <p>You have no posts yet!</p>
