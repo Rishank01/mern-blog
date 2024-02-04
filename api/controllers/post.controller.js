@@ -44,7 +44,7 @@ export const getposts = async(req , res , next) => {
                 // or is used to give the choice ... either search in one or the other
                 $or : [ 
                     { title : {$regex : req.query.searchTerm , $options : 'i'}}, // Here i in options is used so as to search case insensitively..
-                    {content : {$regex : req.query.searchTerm , $options : 'i'}}, // regex is the function to search a pattern
+                    { content : {$regex : req.query.searchTerm , $options : 'i'}}, // regex is the function to search a pattern
                 ],
             }),}).sort({ updatedAt : sortDirection }).skip(startIndex).limit(limit);
 
@@ -70,6 +70,6 @@ export const getposts = async(req , res , next) => {
             })
 
     }catch(error){
-        console.log(error);
+        next(error);
     }
 }
