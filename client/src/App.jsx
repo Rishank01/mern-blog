@@ -11,6 +11,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import OnlyAdminPrivateRoute from './components/OnlyAdminPrivateRoute';
 import CreatePost from './pages/CreatePost';
+import UpdatePost from './pages/updatePost';
 
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
 
         <Route element = {<OnlyAdminPrivateRoute/>}>
           <Route path = '/create-post' element = {<CreatePost/>}/>
+          <Route path = '/update-post/:postId' element = {<UpdatePost/>}/>
         </Route>
 
         <Route path = '/signin' element = {<SignIn/>}/>

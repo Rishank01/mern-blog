@@ -1,10 +1,8 @@
-import { Table } from 'flowbite-react';
+import { Button, Modal, Table } from 'flowbite-react';
 import React, { useEffect, useState } from 'react';
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Modal } from 'flowbite-react';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
-import { Button  } from 'flowbite-react';
 
 
 export default function DashPosts() {
@@ -27,7 +25,7 @@ export default function DashPosts() {
         if(res.ok){
           setUserPosts(data.posts);
           if(data.posts.length < 9){
-            setShowMore(true);
+            setShowMore(false);
           }
         }
       }catch(error){
@@ -116,11 +114,10 @@ export default function DashPosts() {
                         onClick={() => {
                           setShowModal(true);
                           setPostIdToDelete(post._id);
-
                         }}>Delete</span>
                       </Table.Cell>
                       <Table.Cell>
-                        <Link to = {`/update-post/$`} className='text-teal-500 hover:underline'>
+                        <Link to = {`/update-post/${post._id}`} className='text-teal-500 hover:underline'>
                           <span>Edit</span>
                         </Link>
                       </Table.Cell>
