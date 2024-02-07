@@ -17,7 +17,7 @@ export default function Comment({comment , onLike}) {
                 const data = await res.json();
 
                 if(res.ok){
-                    setUser(data);
+                  setUser(data);
                 }
             }catch(error){
                 console.log(error.message);
