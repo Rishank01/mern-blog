@@ -1,7 +1,8 @@
 import { Alert, Button, Textarea } from 'flowbite-react';
 import React, { useEffect } from 'react'
 import {useSelector} from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Comment from './Comment';
 
@@ -14,8 +15,9 @@ export default function CommentSection({postId}) {
     // To showcase all the comments for a particular post below a specific post
     const [comments , setComments] = useState([]);
 
-    console.log(comments);
+    // console.log(comments);
 
+    const navigate = useNavigate();
 
     // function to handle the submit..
     const handleSubmit = async (e) => {
@@ -60,6 +62,32 @@ export default function CommentSection({postId}) {
         }
         getComments();
      },[postId]);
+
+     const handleLike = async(commentId) => {
+        try{
+            if(!currentUser){
+                navigate('/sign-in');
+                return;
+            }
+
+            const res = await fetch(`/api/comment/likeComment/${commentId}` , {
+                method : 'PUT',
+            });
+            if(res.ok){
+                const data = await res.json();
+                setComments(comments.map((comment) => (
+                    comment._id === commentId ? {
+                        ...comment , 
+                        likes : data.likes,
+                        numberOfLikes : data.likes.length,
+                    } : comment
+                )))
+            }
+        }catch(error){
+            console.log(error.message);
+            console.log(error);
+        }
+     }
 
   return (
     <div className='max-w-2xl mx-auto w-full p-3'>
@@ -108,7 +136,7 @@ export default function CommentSection({postId}) {
                 {
                     comments.map((comment) => (
                         <Comment key = {comment._id}
-                            comment = {comment}/>
+                            comment = {comment} onLike = {handleLike}/>
                     ))
                 }
 

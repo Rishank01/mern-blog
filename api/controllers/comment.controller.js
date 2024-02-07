@@ -31,3 +31,28 @@ export const getPostComments = async (req , res , next) => {
         next(error);
     }
 }
+
+export const likeComment = async (req , res , next) => {
+    try{
+        const comment = await Comment.findById(req.params.commentId);
+        if(!comment){
+            return next(errorHandler(404 , 'Comment not found'));
+        }
+
+        const userIndex = comment.likes.indexOf(req.user.id); // Finding if the users like in the likes array of the particular comment
+        if(userIndex === -1){
+            comment.likes.push(req.user.id);
+            comment.numberOfLikes += 1;
+        }
+        else{
+            comment.numberOfLikes -= 1;
+            comment.likes.splice(userIndex , 1); // This is for removing the user like from the likes array
+        }
+
+        await comment.save();
+        res.status(200).json(comment);
+        // const liked = comment.likes.include(req.user.id);
+    }catch(error){
+        next(error);
+    }
+}
