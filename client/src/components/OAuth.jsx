@@ -33,7 +33,7 @@ export default function OAuth() {
               }),
             });
             const data = await res.json();
-            console.log("Data from the server" , data);
+            // console.log("Data from the server" , data);
 
             if(res.ok){
               dispatch(signInSuccess(data));
